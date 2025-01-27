@@ -6,6 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "Bird.generated.h"
 
+class UCapsuleComponent;
+
 UCLASS()
 class TINYOPENWORD_API ABird : public APawn
 {
@@ -22,5 +24,7 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	UPROPERTY()
+	TObjectPtr<UCapsuleComponent> CapsuleComponent;
 
 };
