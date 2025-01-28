@@ -7,6 +7,7 @@
 #include "Bird.generated.h"
 
 class UCapsuleComponent;
+class USkeletalMeshComponent;
 
 UCLASS()
 class TINYOPENWORD_API ABird : public APawn
@@ -24,7 +25,10 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCapsuleComponent> CapsuleComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USkeletalMeshComponent> BirdMeshComponent;
 
 };
