@@ -71,7 +71,7 @@ void ABird::Input_Move(const FInputActionValue& InputActionValue)
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("InputAxisVector: %s"), *InputAxisVector.ToString()));
+	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("InputAxisVector: %s"), *InputAxisVector.ToString()));
 	
 	AddMovementInput(ForwardDirection, InputAxisVector.Y);
 	AddMovementInput(RightDirection, InputAxisVector.X);
