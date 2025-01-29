@@ -18,7 +18,7 @@ void ATinyPlayerController::BeginPlay()
 	UEnhancedInputLocalPlayerSubsystem* InputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 	if (InputLocalPlayerSubsystem)
 	{
-		InputLocalPlayerSubsystem->AddMappingContext(ShooterIMC, 0);
+		InputLocalPlayerSubsystem->AddMappingContext(DefaultIMC, 0);
 	}
 }
 

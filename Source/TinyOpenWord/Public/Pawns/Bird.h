@@ -32,5 +32,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> BirdMeshComponent;
-
+	
 };
+

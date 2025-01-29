@@ -31,7 +31,9 @@ void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ABird::MoveForward);
+	// 老的输入绑定方式
+	// PlayerInputComponent->BindAxis("MoveForward", this, &ABird::MoveForward);
+	
 }
 
 void ABird::BeginPlay()
@@ -47,6 +49,7 @@ void ABird::MoveForward(float Value)
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
+
 
 
 

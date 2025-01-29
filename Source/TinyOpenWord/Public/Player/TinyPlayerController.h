@@ -27,7 +27,7 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputMappingContext> ShooterIMC;
+	TObjectPtr<UInputMappingContext> DefaultIMC;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> MoveAction;
