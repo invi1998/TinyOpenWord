@@ -490,3 +490,156 @@ void Configure(int32 Param1, int32 Param2); // 在蓝图中隐藏Param2并标记
 ---
 
 掌握`UFUNCTION`的使用规则，可以更高效地连接C++与UE的生态系统，同时避免不必要的反射开销。
+
+
+
+# BlueprintThreadSafe
+
+在 Unreal Engine 中，`BlueprintThreadSafe` 是一个关键的 **元数据（Meta）标签**，用于标记某些 `UFUNCTION` 可以在 **多线程环境**（尤其是动画线程）中安全调用。以下是它的核心作用、使用场景和实现细节：
+
+---
+
+### **一、为什么需要 `BlueprintThreadSafe`？**
+UE 的动画系统（AnimGraph）默认在 **工作线程（Worker Thread）** 中更新动画状态，而非主游戏线程（GameThread）。如果在此线程中调用非线程安全的函数，可能导致：
+- **数据竞争（Race Condition）**
+- **崩溃（如访问未同步的UObject）**
+- **不可预测的行为**
+
+通过标记 `BlueprintThreadSafe`，开发者向引擎承诺该函数满足线程安全要求，可以在动画线程中安全执行。
+
+---
+
+### **二、使用场景**
+#### **1. 动画蓝图（AnimBlueprint）中的函数调用**
+- **何时使用**：  
+  当函数被动画蓝图中的 **动画图表（AnimGraph）** 或 **事件图表（EventGraph）** 调用，且需要 **实时更新动画状态** 时，必须标记 `BlueprintThreadSafe`。
+- **示例**：  
+  ```cpp
+  UFUNCTION(BlueprintCallable, Meta=(BlueprintThreadSafe), Category="Animation")
+  float CalculateMovementSpeed() const;
+  ```
+
+#### **2. 多线程任务中的函数调用**
+- **何时使用**：  
+  若函数会被异步任务（如 `AsyncTask`、`ParallelFor`）调用，且需要访问共享数据时，需确保线程安全。
+- **示例**：  
+  ```cpp
+  UFUNCTION(BlueprintCallable, Meta=(BlueprintThreadSafe), Category="AI")
+  bool IsTargetInRange() const;
+  ```
+
+#### **3. 需要高性能计算的函数**
+- **何时使用**：  
+  函数在动画线程中被高频调用（如每帧调用），需避免跨线程切换的开销。
+
+---
+
+### **三、实现线程安全的规则**
+若要标记 `BlueprintThreadSafe`，函数必须满足以下条件：
+
+#### **1. 无共享状态修改**
+- 函数不能修改任何 **非原子（Non-Atomic）** 或 **非线程安全容器（如TArray）** 的共享数据。
+- 允许读取 `const` 成员变量或线程安全数据结构（如 `TAtomic`）。
+
+#### **2. 不调用非线程安全函数**
+- 禁止调用以下操作：
+  - 修改 `UObject` 状态（如 `AActor::DestroyActor()`）
+  - 访问游戏线程资源（如 `UWorld::SpawnActor()`）
+  - 使用非线程安全的引擎API（如物理系统 `Chaos`）
+
+#### **3. 无主线程依赖**
+- 不能依赖只能在主线程中执行的操作，例如：
+  - 修改UI（Slate）
+  - 访问渲染资源（Texture、Material）
+  - 执行蓝图逻辑分支（如延迟节点 `Delay`）
+
+---
+
+### **四、错误用法示例**
+#### **1. 修改共享状态（危险！）**
+```cpp
+UFUNCTION(BlueprintCallable, Meta=(BlueprintThreadSafe))
+void UpdateHealth(float Delta) {
+    Health += Delta; // 非原子操作，可能引发数据竞争！
+}
+```
+
+#### **2. 调用非线程安全函数（危险！）**
+```cpp
+UFUNCTION(BlueprintCallable, Meta=(BlueprintThreadSafe))
+void SpawnEnemy() {
+    GetWorld()->SpawnActor(...); // SpawnActor只能在游戏线程调用！
+}
+```
+
+---
+
+### **五、正确实现线程安全**
+#### **1. 只读操作（安全）**
+```cpp
+UFUNCTION(BlueprintCallable, Meta=(BlueprintThreadSafe))
+float GetHealthRatio() const {
+    return CurrentHealth / MaxHealth; // 仅读取const成员变量
+}
+```
+
+#### **2. 原子操作（安全）**
+```cpp
+// 使用原子变量存储状态
+TAtomic<int32> AtomicCounter;
+
+UFUNCTION(BlueprintCallable, Meta=(BlueprintThreadSafe))
+int32 IncrementCounter() {
+    return ++AtomicCounter; // 原子操作，线程安全
+}
+```
+
+#### **3. 委托到游戏线程（安全）**
+如果必须修改状态，需将操作派发到游戏线程：
+```cpp
+UFUNCTION(BlueprintCallable, Meta=(BlueprintThreadSafe))
+void SafeDamage(float Damage) {
+    // 通过异步任务委托到游戏线程
+    AsyncTask(ENamedThreads::GameThread, [this, Damage]() {
+        if (IsValid(this)) {
+            Health -= Damage; // 在游戏线程中执行
+        }
+    });
+}
+```
+
+---
+
+### **六、调试与验证**
+#### **1. 检查线程上下文**
+```cpp
+// 在函数内检查当前线程
+if (!IsInGameThread()) {
+    UE_LOG(LogTemp, Warning, TEXT("此函数在非游戏线程调用！"));
+}
+```
+
+#### **2. 静态分析工具**
+- 使用 **Unreal Insights** 或 **Visual Studio 性能分析器** 跟踪线程调用栈。
+- 启用 `-ThreadSanitizer` 编译选项检测数据竞争。
+
+#### **3. 崩溃排查**
+- 若在标记为 `BlueprintThreadSafe` 的函数中崩溃，优先检查：
+  - 是否修改了非原子变量？
+  - 是否调用了非线程安全API？
+  - 是否访问了已销毁的 `UObject`？
+
+---
+
+### **七、最佳实践总结**
+
+| **场景**                     | **是否使用 `BlueprintThreadSafe`** | **关键注意事项**     |
+| ---------------------------- | ---------------------------------- | -------------------- |
+| 动画蓝图中的状态计算函数     | ✔️                                  | 只读或原子操作       |
+| 高频调用的性能敏感函数       | ✔️                                  | 避免跨线程切换       |
+| 修改UObject状态或调用引擎API | ❌                                  | 必须委托到游戏线程   |
+| 多线程任务中的共享数据访问   | ✔️                                  | 使用原子变量或锁机制 |
+
+---
+
+通过合理使用 `BlueprintThreadSafe`，可以在保证线程安全的前提下，充分利用UE的多线程性能优势，避免动画系统或异步任务中的潜在风险。
