@@ -5,7 +5,9 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 
 ABird::ABird()
@@ -22,6 +24,13 @@ ABird::ABird()
 	BirdMeshComponent->SetupAttachment(RootComponent);
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;	// 自动接收玩家输入
+
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
+	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->TargetArmLength = 300.f;
+
+	BirdCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("BirdCameraComponent"));
+	BirdCameraComponent->SetupAttachment(SpringArmComponent);
 }
 
 void ABird::Tick(float DeltaTime)

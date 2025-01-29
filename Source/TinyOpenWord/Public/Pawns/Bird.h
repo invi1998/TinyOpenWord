@@ -6,6 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "Bird.generated.h"
 
+class USpringArmComponent;
+class UCameraComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
@@ -33,6 +35,13 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> BirdMeshComponent;
+
+	// 弹簧臂组件
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USpringArmComponent> SpringArmComponent;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UCameraComponent> BirdCameraComponent;
 
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputMappingContext> DefaultIMC;
