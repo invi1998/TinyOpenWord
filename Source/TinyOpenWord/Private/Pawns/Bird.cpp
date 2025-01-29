@@ -33,11 +33,7 @@ void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// 老的输入绑定方式
-	// PlayerInputComponent->BindAxis("MoveForward", this, &ABird::MoveForward);
-
-	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
-	if (EnhancedInputComponent)
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABird::Input_Move);
 	}
@@ -54,14 +50,6 @@ void ABird::BeginPlay()
 		{
 			InputLocalPlayerSubsystem->AddMappingContext(DefaultIMC, 0);
 		}
-	}
-}
-
-void ABird::MoveForward(float Value)
-{
-	if (Value != 0.0f && GetController())
-	{
-		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
 
