@@ -59,7 +59,7 @@ void ABird::BeginPlay()
 
 void ABird::MoveForward(float Value)
 {
-	if (Value != 0.0f)
+	if (Value != 0.0f && GetController())
 	{
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
