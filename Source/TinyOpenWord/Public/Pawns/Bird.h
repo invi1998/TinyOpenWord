@@ -6,6 +6,9 @@
 #include "GameFramework/Pawn.h"
 #include "Bird.generated.h"
 
+struct FInputActionValue;
+class UInputAction;
+class UInputMappingContext;
 class UCapsuleComponent;
 class USkeletalMeshComponent;
 
@@ -32,6 +35,14 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> BirdMeshComponent;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputMappingContext> DefaultIMC;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> MoveAction;
+
+	void Input_Move(const FInputActionValue& InputActionValue);
 	
 };
 
