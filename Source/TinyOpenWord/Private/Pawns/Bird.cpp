@@ -68,25 +68,31 @@ void ABird::BeginPlay()
 
 void ABird::Input_Move(const FInputActionValue& InputActionValue)
 {
-	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
-	const FRotator Rotation = GetControlRotation();
-	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
-
-	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
 	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("InputAxisVector: %s"), *InputAxisVector.ToString()));
 	
-	AddMovementInput(ForwardDirection, InputAxisVector.Y);
-	AddMovementInput(RightDirection, InputAxisVector.X);
+	if (GetController())
+	{
+		const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+		const FRotator Rotation = GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		
+		AddMovementInput(ForwardDirection, InputAxisVector.Y);
+		AddMovementInput(RightDirection, InputAxisVector.X);
+	}
 	
 }
 
 void ABird::Input_Look(const FInputActionValue& InputActionValue)
 {
-	const FVector2d InputAxisVector = InputActionValue.Get<FVector2D>();
-	AddControllerYawInput(InputAxisVector.X);
-	AddControllerPitchInput(InputAxisVector.Y);
+	if (GetController())
+	{
+		const FVector2d InputAxisVector = InputActionValue.Get<FVector2D>();
+		AddControllerYawInput(InputAxisVector.X);
+		AddControllerPitchInput(InputAxisVector.Y);
+	}
 }
 
 
