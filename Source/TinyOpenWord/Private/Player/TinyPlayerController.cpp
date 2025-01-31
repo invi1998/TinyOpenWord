@@ -53,9 +53,6 @@ void ATinyPlayerController::Input_Move(const FInputActionValue& InputActionValue
 void ATinyPlayerController::Input_Look(const FInputActionValue& InputActionValue)
 {
 	const FVector2d InputAxisVector = InputActionValue.Get<FVector2D>();
-	if (APawn* ControlledPawn = GetPawn<APawn>())
-	{
-		ControlledPawn->AddControllerYawInput(InputAxisVector.X);
-		ControlledPawn->AddControllerPitchInput(InputAxisVector.Y);
-	}
+	AddYawInput(InputAxisVector.X);
+	AddPitchInput(InputAxisVector.Y);
 }
