@@ -31,6 +31,9 @@ ABird::ABird()
 
 	BirdCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("BirdCameraComponent"));
 	BirdCameraComponent->SetupAttachment(SpringArmComponent);
+
+	bUseControllerRotationPitch = true;		// 使用控制器旋转俯仰
+	bUseControllerRotationYaw = true;		// 使用控制器旋转偏航
 }
 
 void ABird::Tick(float DeltaTime)
@@ -45,6 +48,7 @@ void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABird::Input_Move);
+	    EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Input_Look);
 	}
 	
 }
@@ -76,6 +80,13 @@ void ABird::Input_Move(const FInputActionValue& InputActionValue)
 	AddMovementInput(ForwardDirection, InputAxisVector.Y);
 	AddMovementInput(RightDirection, InputAxisVector.X);
 	
+}
+
+void ABird::Input_Look(const FInputActionValue& InputActionValue)
+{
+	const FVector2d InputAxisVector = InputActionValue.Get<FVector2D>();
+	AddControllerYawInput(InputAxisVector.X);
+	AddControllerPitchInput(InputAxisVector.Y);
 }
 
 
