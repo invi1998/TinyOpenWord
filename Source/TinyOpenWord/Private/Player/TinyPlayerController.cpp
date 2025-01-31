@@ -37,11 +37,11 @@ void ATinyPlayerController::SetupInputComponent()
 void ATinyPlayerController::Input_Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
-	const FRotator Rotation = GetControlRotation();
-	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+	const FRotator Rotation = GetControlRotation();		// 获取控制器旋转
+	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);	// 只保留Yaw旋转
 
-	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);	// 通过旋转矩阵获取X轴
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);		// 通过旋转矩阵获取Y轴
 
 	if (APawn* ControlledPawn = GetPawn<APawn>())
 	{

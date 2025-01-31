@@ -211,3 +211,119 @@ Modifiers顺序：
 ```cpp
 UCLASS()
 class UMyCustomModifier : public UInputModifier
+
+```
+
+
+
+# 角色移动（第三人称视角）
+
+```c++
+void ATinyPlayerController::Input_Move(const FInputActionValue& InputActionValue)
+{
+	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+	const FRotator Rotation = GetControlRotation();
+	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
+		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
+	}
+}
+```
+
+
+
+在Unreal Engine中，角色移动的方向计算通常需要根据控制器的视角方向进行调整。以下是代码中角色移动的数学原理详解，以及为何不直接使用 `AddMovementInput(GetForward(), value)` 的原因：
+
+---
+
+### **1. 数学原理：基于控制器视角的移动方向计算**
+#### **(1) 输入值解析**
+```cpp
+const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+```
+- **输入值**：`InputAxisVector` 的 `Y` 分量（前后方向）和 `X` 分量（左右方向）来自玩家输入（如键盘或手柄摇杆）。
+
+#### **(2) 获取控制器旋转**
+```cpp
+const FRotator Rotation = GetControlRotation();
+```
+- **控制器旋转**：`GetControlRotation()` 返回控制器的当前旋转（Pitch、Yaw、Roll），通常对应摄像头的方向。
+
+#### **(3) 提取Yaw旋转**
+```cpp
+const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+```
+- **Yaw分量**：仅保留控制器的水平旋转（Yaw），忽略上下倾斜（Pitch）和翻滚（Roll），确保移动方向始终在水平面上。
+
+#### **(4) 计算世界空间方向向量**
+```cpp
+const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+```
+- **旋转矩阵**：`FRotationMatrix(YawRotation)` 将Yaw旋转转换为一个3x3旋转矩阵。
+- **方向向量**：
+  - `GetUnitAxis(EAxis::X)`：获取旋转矩阵的 **X轴单位向量**（即控制器视角的正前方）。
+  - `GetUnitAxis(EAxis::Y)`：获取旋转矩阵的 **Y轴单位向量**（即控制器视角的正右方）。
+
+#### **(5) 应用移动输入**
+```cpp
+ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
+ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
+```
+- **移动合成**：将输入值分别与方向向量相乘，叠加到角色的移动输入中，实现以下效果：
+  - `InputAxisVector.Y > 0`：角色朝控制器正前方移动。
+  - `InputAxisVector.X > 0`：角色朝控制器正右方移动。
+
+---
+
+### **2. 为何不直接使用 `AddMovementInput(GetForward(), value)`？**
+#### **(1) 方向来源的区别**
+- **`GetForward()`**：
+  - 返回的是 **Pawn自身坐标系的正前方**（即角色模型的朝向）。
+  - 适用于需要角色模型方向与移动方向严格一致的场景（如横版2D游戏）。
+- **控制器Yaw方向**：
+  - 基于控制器的旋转，而非Pawn自身的旋转。
+  - 适用于第一人称或第三人称跟随视角，确保移动方向始终与玩家视角一致。
+
+#### **(2) 典型场景对比**
+| **场景**                | 使用 `GetForward()` 的问题                       | 使用控制器方向的优势                   |
+| ----------------------- | ------------------------------------------------ | -------------------------------------- |
+| **第一人称射击**        | 角色移动方向与玩家视角不一致（如角色背对摄像头） | 移动方向始终与摄像头正前方对齐         |
+| **第三人称跟随视角**    | 角色转身动画可能导致移动方向突然变化             | 移动方向平滑跟随摄像头旋转             |
+| **摄像机自由旋转的RPG** | 角色模型可能面向不同方向（如战斗中侧身移动）     | 移动方向由摄像机控制，提供直观操作体验 |
+
+#### **(3) 示例验证**
+假设角色模型（Pawn）的朝向与控制器的Yaw方向存在偏移：
+- **直接使用 `GetForward()`**：
+  ```cpp
+  // 角色移动方向基于模型自身朝向
+  ControlledPawn->AddMovementInput(GetPawn()->GetActorForwardVector(), InputAxisVector.Y);
+  ```
+  - 若角色模型正在播放转身动画，移动方向会突然改变，导致操作不连贯。
+- **使用控制器方向**：
+  - 移动方向始终与玩家视角一致，无论角色模型当前朝向如何。
+
+---
+
+### **3. 关键总结**
+- **数学本质**：通过控制器的Yaw旋转，将输入值转换为世界空间中的方向向量，实现与视角一致的移动。
+- **设计意图**：分离角色模型朝向与移动方向，确保玩家操作直观性（如《刺客信条》《巫师3》的第三人称移动逻辑）。
+- **灵活性**：通过代码显式控制方向，可轻松扩展复杂逻辑（如斜坡移动修正、摄像机偏移补偿）。
+
+---
+
+### **代码改进建议**
+若需同时支持角色朝向与控制器方向对齐（如《生化危机4》的移动模式），可混合使用两种方向：
+```cpp
+// 根据需求混合Pawn方向与控制器方向
+const FVector PawnForward = GetPawn()->GetActorForwardVector();
+const FVector ControllerForward = ForwardDirection;
+const FVector HybridDirection = (PawnForward + ControllerForward).GetSafeNormal();
+ControlledPawn->AddMovementInput(HybridDirection, InputAxisVector.Y);
+```
