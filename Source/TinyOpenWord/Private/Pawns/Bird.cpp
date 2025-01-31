@@ -23,7 +23,7 @@ ABird::ABird()
 	BirdMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BirdMeshComponent"));
 	BirdMeshComponent->SetupAttachment(RootComponent);
 
-	AutoPossessPlayer = EAutoReceiveInput::Player0;	// 自动接收玩家输入
+	// AutoPossessPlayer = EAutoReceiveInput::Player0;	// 自动接收玩家输入
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(RootComponent);

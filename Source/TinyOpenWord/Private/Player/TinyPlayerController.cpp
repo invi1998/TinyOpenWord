@@ -27,8 +27,11 @@ void ATinyPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	UEnhancedInputComponent* ShooterInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
-	ShooterInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATinyPlayerController::Input_Move);
-	
+	if (ShooterInputComponent)
+	{
+		ShooterInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATinyPlayerController::Input_Look);
+		ShooterInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATinyPlayerController::Input_Move);
+	}
 }
 
 void ATinyPlayerController::Input_Move(const FInputActionValue& InputActionValue)
@@ -44,5 +47,15 @@ void ATinyPlayerController::Input_Move(const FInputActionValue& InputActionValue
 	{
 		ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
 		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
+	}
+}
+
+void ATinyPlayerController::Input_Look(const FInputActionValue& InputActionValue)
+{
+	const FVector2d InputAxisVector = InputActionValue.Get<FVector2D>();
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ControlledPawn->AddControllerYawInput(InputAxisVector.X);
+		ControlledPawn->AddControllerPitchInput(InputAxisVector.Y);
 	}
 }
