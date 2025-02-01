@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UGroomComponent;
 
 UCLASS()
 class TINYOPENWORD_API ATinyCharacter : public ACharacter
