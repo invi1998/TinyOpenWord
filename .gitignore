@@ -6,6 +6,8 @@ Build
 Plugins/Developer/RiderLink/
 Content/Cabin_Lake/Textures/
 Content/PriestessGirl/Textures/
+Content/MetaHumans/
+Content/0_MHC/
 
 .idea/
 *.user
